@@ -3,8 +3,17 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
-public enum State { PLAYER_TURN, ENEMY_TURN, CHOOSING, WON, LOST, OVER }
- 
+public enum State
+{
+    PLAYER_TURN,
+    ENEMY_TURN,
+    CHOOSING,
+    WON,
+    LOST,
+    OVER,
+    START
+}
+
 public class GameManager : MonoBehaviour
 {
     public static GameManager instance;
@@ -14,6 +23,8 @@ public class GameManager : MonoBehaviour
     public CardDeck cardDeck;
     public TMP_Text playerScoreText, enemyScoreText;
     public TMP_Text dialogText;
+    public State gameState;
+    [HideInInspector] public int leftToTurn = 2;
 
     [HideInInspector] public CardData enemyData;
     private GameObject newCardGO;
@@ -21,10 +32,10 @@ public class GameManager : MonoBehaviour
     private GameObject zero;
     private GameObject one, two, three, four, five, six, seven, eight, nine, ten, eleven, twelve;
     private Field playerField, enemyField;
-   
-    
+
+
     #region Unity
-    
+
     private void Awake()
     {
         instance = this;
@@ -36,32 +47,21 @@ public class GameManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        string pathPrefix = "scriptable objects/";
-
-        minusTwo = LoadCard(pathPrefix + "minusTwo");
-        minusOne = LoadCard(pathPrefix + "minusOne");
-        zero = LoadCard(pathPrefix + "zero");
-        one = LoadCard(pathPrefix + "one");
-        two = LoadCard(pathPrefix + "two");
-        three = LoadCard(pathPrefix + "three");
-        four = LoadCard(pathPrefix + "four");
-        five = LoadCard(pathPrefix + "five");
-        six = LoadCard(pathPrefix + "six");
-        seven = LoadCard(pathPrefix + "seven");
-        eight = LoadCard(pathPrefix + "eight");
-        nine = LoadCard(pathPrefix + "nine");
-        ten = LoadCard(pathPrefix + "ten");
-        eleven = LoadCard(pathPrefix + "eleven");
-        twelve = LoadCard(pathPrefix + "twelve");
+        LoadCards();
 
         CreateDeck();
         cardDeck.ShuffleDeck();
 
         PlaceCardInField();
-        
+
         playerField.CreateColumns();
         enemyField.CreateColumns();
+
+        gameState = State.START;
+        EnemyTurnTowCards();
+        PlayerTurnTwoCards();
     }
+
 
     private void Update()
     {
@@ -70,7 +70,7 @@ public class GameManager : MonoBehaviour
             PlaceCardOnStack();
         }
     }
-    
+
     #endregion
 
     #region Game Rules
@@ -93,18 +93,25 @@ public class GameManager : MonoBehaviour
     /* ***********************
      *       GAME FLOW:      *
      *************************/
-    
+
     // GameFlowManager to combine the GameFlow Methods (Script? Method?)
-    
+
 
     /*    (1) player needs to turn 2 cards (automated for cpu)
     */
-    private void PlayerTurnTwoCards()
+    public void PlayerTurnTwoCards()
     {
-        dialogText.text = "Choose 2 Cards to reveal!";
-        // wait for player
+        if (leftToTurn >= 0)
+        {
+            dialogText.text = $"Choose {leftToTurn} Cards to reveal!";
+        }
         
-        // check if 2 cards where opened
+        
+        /* (2) */
+        if (leftToTurn <= 0)
+        {
+            CheckWhoBegins();
+        }
     }
 
     private void EnemyTurnTowCards()
@@ -113,25 +120,31 @@ public class GameManager : MonoBehaviour
         {
             var r = Random.Range(0, enemyField.CardPositions.Count - 1);
             enemyField.GetCardFromField(r).TurnCard();
+            UpdateScore(enemyField.GetCardFromField(r).location);
         }
     }
-     
+
     /*    (2) player with the highest score begins
-     */ 
-    
-     /*    (3) draw card and decide to put back or trade
-     *      3.1 - if decided to put back:
-     *              - player has to choose a not yet turned card to reveal
-     *
-     *      3.2 - if player decided to trade
-     *              - he has to choose a card to trade
-     *                  - that card is going to the stack
-     * 
-     *    () choose a card from the stack to trade with own card
-     *
-     */ 
-    
-    
+     */
+    private void CheckWhoBegins()
+    {
+        gameState = playerField.Score > enemyField.Score ? State.PLAYER_TURN : State.ENEMY_TURN;
+        dialogText.text = gameState == State.PLAYER_TURN ? "Player Turn" : "Enemy Turn";
+    }
+
+    /*    (3) draw card and decide to put back or trade
+    *      3.1 - if decided to put back:
+    *              - player has to choose a not yet turned card to reveal
+    *
+    *      3.2 - if player decided to trade
+    *              - he has to choose a card to trade
+    *                  - that card is going to the stack
+    * 
+    *    () choose a card from the stack to trade with own card
+    *
+    */
+
+
     /* when a card is turned:
         - from which player?
         - get the number
@@ -149,11 +162,10 @@ public class GameManager : MonoBehaviour
             Debug.Log("Last Turn...");
             Debug.Log("Game Over..!");
         }
-        
     }
 
     #endregion
-    
+
     #region Place cards
 
     public void PlaceCardOnStack()
@@ -165,7 +177,7 @@ public class GameManager : MonoBehaviour
         cardStackPrefab.GetComponent<Card>().TurnCard();
         cardStackPrefab.GetComponent<Card>().location = c.location;
     }
-    
+
     private void PlaceCardInField()
     {
         for (int i = 0; i < playerField.CardPositions.Count; i++)
@@ -183,9 +195,11 @@ public class GameManager : MonoBehaviour
         enemyField.SetCurrentHand();
         enemyField.SetTag("EnemyField");
     }
+
     #endregion
 
     #region Column Check
+
     private bool AllValuesAreTheSame(CardColumn col)
     {
         for (int i = 1; i < col.cards.Length; i++)
@@ -195,12 +209,13 @@ public class GameManager : MonoBehaviour
                 return false;
             }
         }
+
         return true;
     }
 
     private void RemoveColumn(CardColumn currentCol, Location loc)
     {
-        Debug.Log($"Column {currentCol.columnNumber+1} can be removed!");
+        Debug.Log($"Column {currentCol.columnNumber + 1} can be removed!");
 
         for (int i = 0; i < currentCol.cards.Length; i++)
         {
@@ -208,14 +223,14 @@ public class GameManager : MonoBehaviour
             currentCol.deleted = true;
             currentCol.cards[i].gameObject.SetActive(false);
         }
-        
+
         UpdateScore(loc);
     }
 
     public void CheckColumnForSameCard(Location loc)
     {
         Field f = loc == Location.PLAYER ? playerField : enemyField;
-        
+
         for (int i = 0; i < 4; i++)
         {
             var currentCol = f.GetColumn(i);
@@ -230,9 +245,11 @@ public class GameManager : MonoBehaviour
             }
         }
     }
+
     #endregion
-    
+
     #region Update Fields
+
     public void SwitchCards(Card cardInField, Card cardFromStack)
     {
         (cardInField.value, cardFromStack.value) = (cardFromStack.value, cardInField.value);
@@ -246,7 +263,7 @@ public class GameManager : MonoBehaviour
         // update column
         UpdateScore(cardInField.location);
     }
-    
+
     public void UpdateScore(Location loc)
     {
         Field f = loc == Location.PLAYER ? playerField : enemyField;
@@ -262,14 +279,36 @@ public class GameManager : MonoBehaviour
             }
         }
 
+        f.Score = count;
         f.ScoreText.text = count.ToString();
         CheckForGameOver(loc);
     }
-    
+
     #endregion
 
     #region create and load deck
-    
+
+    private void LoadCards()
+    {
+        string pathPrefix = "scriptable objects/";
+
+        minusTwo = LoadCard(pathPrefix + "minusTwo");
+        minusOne = LoadCard(pathPrefix + "minusOne");
+        zero = LoadCard(pathPrefix + "zero");
+        one = LoadCard(pathPrefix + "one");
+        two = LoadCard(pathPrefix + "two");
+        three = LoadCard(pathPrefix + "three");
+        four = LoadCard(pathPrefix + "four");
+        five = LoadCard(pathPrefix + "five");
+        six = LoadCard(pathPrefix + "six");
+        seven = LoadCard(pathPrefix + "seven");
+        eight = LoadCard(pathPrefix + "eight");
+        nine = LoadCard(pathPrefix + "nine");
+        ten = LoadCard(pathPrefix + "ten");
+        eleven = LoadCard(pathPrefix + "eleven");
+        twelve = LoadCard(pathPrefix + "twelve");
+    }
+
     private void CreateDeck()
     {
         List<GameObject> cards = new List<GameObject>();
@@ -302,7 +341,6 @@ public class GameManager : MonoBehaviour
             }
 
             cards.Add(zero);
-
         }
 
         cardDeck.PopulateDeck(cards);
@@ -330,6 +368,6 @@ public class GameManager : MonoBehaviour
 
         return c;
     }
-    
+
     #endregion
 }
