@@ -47,6 +47,7 @@ public class Card : MonoBehaviour
             TurnCard();
             var parent = gameObject.transform.parent.transform.parent.gameObject;
             GameManager.instance.UpdateScore(location);
+            //GameManager.instance.PlaceCardOnStack();
         }
     }
 }

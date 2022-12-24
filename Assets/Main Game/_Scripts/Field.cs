@@ -2,21 +2,24 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using UnityEngine.UIElements;
 
 public class Field : MonoBehaviour
 {
     public List<GameObject> CardPositions;
-    public int[,] FieldColumns;
     public GameObject[,] FieldColumnsEx;
     public TMP_Text ScoreText;
     public int Score;
+    
+    public CardColumn[] columns;
 
     [SerializeField] private List<GameObject> currentHand;
 
     private void Awake()
     {
         currentHand = new List<GameObject>();
-        FieldColumns = new int[4, 3];
+        FieldColumnsEx = new GameObject[4, 3];
+        columns = new CardColumn[4];
         Score = 0;
     }
 
@@ -25,17 +28,27 @@ public class Field : MonoBehaviour
         ScoreText.text = Score.ToString();
     }
 
-    public void CreateFieldColumns()
+    public void CreateColumns()
     {
         int row, col;
-        for (row = 0; row < FieldColumns.GetLength(0); row++)
+        for (col = 0; col < 4; col++)
         {
-            for (col = 0; col < FieldColumns.GetLength(1); col++)
+            columns[col] = gameObject.AddComponent<CardColumn>();
+            columns[col].columnNumber = col;
+            
+            for (row = 0; row < 3; row++)
             {
-                FieldColumns[row, col] = GetCardValueFromCardPosition(row + col * FieldColumns.GetLength(0));
+                Card c = GetCardFromField(col + row * columns.GetLength(0));
+                columns[col].SetColumn(c, row);
             }
         }
     }
+
+    public CardColumn GetColumn(int col)
+    {
+        return columns[col];
+    }
+
     public void CreateFieldColumnsEx()
     {
         int row, col;
@@ -48,36 +61,9 @@ public class Field : MonoBehaviour
         }
     }
     
-    // public void CreateFieldColumns()
-    // {
-    //     // Column 1   0  1  2
-    //     // Column 1: [1, 5, 9 ]
-    //     FieldColumns[0, 0] = GetCardValueFromCardPosition(0);
-    //     FieldColumns[0, 1] = GetCardValueFromCardPosition(4);
-    //     FieldColumns[0, 2] = GetCardValueFromCardPosition(8);
-    //
-    //     // Column 2
-    //     // Column 2: [2, 6, 10]
-    //     FieldColumns[1, 0] = GetCardValueFromCardPosition(1);
-    //     FieldColumns[1, 1] = GetCardValueFromCardPosition(5);
-    //     FieldColumns[1, 2] = GetCardValueFromCardPosition(9);
-    //
-    //     // Column 3
-    //     // Column 3: [3, 7, 11]
-    //     FieldColumns[2, 0] = GetCardValueFromCardPosition(2);
-    //     FieldColumns[2, 1] = GetCardValueFromCardPosition(6);
-    //     FieldColumns[2, 2] = GetCardValueFromCardPosition(10);
-    //
-    //     // Column 4
-    //     // Column 4: [4, 8, 12]
-    //     FieldColumns[3, 0] = GetCardValueFromCardPosition(3);
-    //     FieldColumns[3, 1] = GetCardValueFromCardPosition(7);
-    //     FieldColumns[3, 2] = GetCardValueFromCardPosition(11);
-    // }
-
-    public ArraySlice2D<int> GetColumn(int col)
+    public ArraySlice2D<GameObject> GetColumnEx(int col)
     {
-        return FieldColumns.Slice(col);
+        return FieldColumnsEx.Slice(col);
     }
 
     public void SetCurrentHand()
@@ -86,12 +72,6 @@ public class Field : MonoBehaviour
         {
             currentHand.Add(t.transform.GetChild(0).gameObject);
         }
-    }
-
-    public void UpdateScore(int newScore)
-    {
-        Score += newScore;
-        ScoreText.text = Score.ToString();
     }
 
     public void SetTag(string t)
@@ -109,8 +89,6 @@ public class Field : MonoBehaviour
     
     public Card GetCardFromField(int position) => CardPositions[position].transform.GetChild(0).GetComponent<Card>();
 
-    private int GetCardValueFromCardPosition(int position) => CardPositions[position].transform.GetChild(0).GetComponent<Card>().value;
-    
     private GameObject GetCardGameObjectFromCardPosition(int position) => CardPositions[position].transform.GetChild(0).gameObject;
 }
 

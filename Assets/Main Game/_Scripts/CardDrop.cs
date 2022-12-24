@@ -13,6 +13,8 @@ public class CardDrop : MonoBehaviour, IDropHandler
 
 
         GameManager.instance.SwitchCards(tC, eventData.pointerDrag.gameObject.GetComponent<Card>());
+        GameManager.instance.CheckColumnForSameCard(tC.location);
+        //GameManager.instance.PlaceCardOnStack();
     }
 
 }

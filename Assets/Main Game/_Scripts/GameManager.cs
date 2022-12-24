@@ -85,11 +85,9 @@ public class GameManager : MonoBehaviour
         cardDeck.ShuffleDeck();
 
         PlaceCardInField();
-        playerField.CreateFieldColumns();
-        enemyField.CreateFieldColumns();
         
-        playerField.CreateFieldColumnsEx();
-        enemyField.CreateFieldColumnsEx();
+        playerField.CreateColumns();
+        enemyField.CreateColumns();
     }
 
     private void Update()
@@ -99,23 +97,6 @@ public class GameManager : MonoBehaviour
             PlaceCardOnStack();
         }
     }
-
-    // update score after turning card
-    public void UpdateScore(GameObject cardGO, Card c)
-    {
-        switch (cardGO.tag)
-        {
-            case "PlayerField":
-                //update player score
-                playerField.UpdateScore(c.value);
-                Debug.Log(c.value);
-                break;
-            case "EnemyField":
-                // update enemy score
-                enemyField.UpdateScore(c.value);
-                break;
-        }
-    }   
 
     public void SwitchCards(Card cardInField, Card cardFromStack)
     {
@@ -131,7 +112,7 @@ public class GameManager : MonoBehaviour
         UpdateScore(cardInField.location);
     }
 
-    void PlaceCardOnStack()
+    public void PlaceCardOnStack()
     {
         Card c = CreateCard();
 
@@ -141,34 +122,33 @@ public class GameManager : MonoBehaviour
         cardStackPrefab.GetComponent<Card>().location = c.location;
     }
 
-    private bool AllValuesAreTheSame(ArraySlice2D<int> slice)
+    private bool AllValuesAreTheSame(CardColumn col)
     {
-        // Compare each element to the first element.
-        for (int i = 1; i < slice.Length; i++)
+        for (int i = 1; i < col.cards.Length; i++)
         {
-            if (slice[i] != slice[0])
+            if (col.cards[i].value != col.cards[0].value)
             {
-                // If any element is not equal to the first element, return false.
                 return false;
             }
         }
-
-        // If the loop completes without finding any elements that are not equal to the first element, return true.
         return true;
     }
 
-    private void RemoveColumn(ArraySlice2D<int> currentCol)
+    private void RemoveColumn(CardColumn currentCol, Location loc)
     {
-        Debug.Log($"Column {currentCol} can be removed!");
+        Debug.Log($"Column {currentCol.columnNumber+1} can be removed!");
+
+        for (int i = 0; i < currentCol.cards.Length; i++)
+        {
+            currentCol.cards[i].wasTurned = false;
+            currentCol.deleted = true;
+            currentCol.cards[i].gameObject.SetActive(false);
+        }
         
-        // set card gameobjects from column to invisible
-        // maybe set value to -99 => if -99 don't count them 
-        
-        // get GameObjects fromm currentCol
-        
+        UpdateScore(loc);
     }
 
-    private void CheckColumnForSameCard(Location loc)
+    public void CheckColumnForSameCard(Location loc)
     {
         Field f = loc == Location.PLAYER ? playerField : enemyField;
         
@@ -176,21 +156,21 @@ public class GameManager : MonoBehaviour
         {
             var currentCol = f.GetColumn(i);
 
-            if (AllValuesAreTheSame(currentCol))
+            if (!currentCol.deleted)
             {
-                RemoveColumn(currentCol);
-                break;
+                if (AllValuesAreTheSame(currentCol))
+                {
+                    RemoveColumn(currentCol, loc);
+                    break;
+                }
             }
-
         }
     }
 
     public void UpdateScore(Location loc)
     {
         Field f = loc == Location.PLAYER ? playerField : enemyField;
-        f.CreateFieldColumns();
-        f.CreateFieldColumnsEx();
-
+        f.CreateColumns();
 
         int count = 0;
         for (int i = 0; i < f.CardPositions.Count; i++)
@@ -204,7 +184,6 @@ public class GameManager : MonoBehaviour
         }
 
         f.ScoreText.text = count.ToString();
-        CheckColumnForSameCard(loc);
     }
 
     private void PlaceCardInField()
