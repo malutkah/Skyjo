@@ -7,7 +7,6 @@ using UnityEngine.UIElements;
 public class Field : MonoBehaviour
 {
     public List<GameObject> CardPositions;
-    public GameObject[,] FieldColumnsEx;
     public TMP_Text ScoreText;
     public int Score;
     
@@ -18,7 +17,6 @@ public class Field : MonoBehaviour
     private void Awake()
     {
         currentHand = new List<GameObject>();
-        FieldColumnsEx = new GameObject[4, 3];
         columns = new CardColumn[4];
         Score = 0;
     }
@@ -26,6 +24,20 @@ public class Field : MonoBehaviour
     private void Start()
     {
         ScoreText.text = Score.ToString();
+    }
+
+    public bool AreAllCardsTurned()
+    {
+        for (int i = 0; i < CardPositions.Count; i++)
+        {
+            Card c = GetCardFromField(i);
+            if (!c.wasTurned)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public void CreateColumns()
@@ -49,23 +61,6 @@ public class Field : MonoBehaviour
         return columns[col];
     }
 
-    public void CreateFieldColumnsEx()
-    {
-        int row, col;
-        for (row = 0; row < FieldColumnsEx.GetLength(0); row++)
-        {
-            for (col = 0; col < FieldColumnsEx.GetLength(1); col++)
-            {
-                FieldColumnsEx[row, col] = GetCardGameObjectFromCardPosition(row + col * FieldColumnsEx.GetLength(0));
-            }
-        }
-    }
-    
-    public ArraySlice2D<GameObject> GetColumnEx(int col)
-    {
-        return FieldColumnsEx.Slice(col);
-    }
-
     public void SetCurrentHand()
     {
         foreach (var t in CardPositions)
@@ -79,48 +74,7 @@ public class Field : MonoBehaviour
         gameObject.tag = t;
     }
 
-    public void DeactivateColumn(ArraySlice2D<int> col)
-    {
-        for (int i = 0; i < col.Length; i++)
-        {
-            col[i] = -99;
-        }
-    }
     
     public Card GetCardFromField(int position) => CardPositions[position].transform.GetChild(0).GetComponent<Card>();
 
-    private GameObject GetCardGameObjectFromCardPosition(int position) => CardPositions[position].transform.GetChild(0).gameObject;
 }
-
-#region ArraySlice2D
-
-static class ArraySliceExt
-{
-    public static ArraySlice2D<T> Slice<T>(this T[,] arr, int firstDimension)
-    {
-        return new ArraySlice2D<T>(arr, firstDimension);
-    }
-}
-
-public class ArraySlice2D<T>
-{
-    private readonly T[,] arr;
-    private readonly int firstDimension;
-    private readonly int length;
-    public int Length { get { return length; } }
-
-    public ArraySlice2D(T[,] arr, int firstDimension)
-    {
-        this.arr = arr;
-        this.firstDimension = firstDimension;
-        length = arr.GetUpperBound(1) + 1;
-    }
-
-    public T this[int index]
-    {
-        get => arr[firstDimension, index];
-        set => arr[firstDimension, index] = value;
-    }
-}
-
-#endregion
