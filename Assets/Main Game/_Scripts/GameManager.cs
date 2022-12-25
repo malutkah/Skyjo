@@ -25,6 +25,7 @@ public class GameManager : MonoBehaviour
     public TMP_Text dialogText;
     public State gameState;
     [HideInInspector] public int leftToTurn = 2;
+    public bool playerRevealedCard = false;
 
     [HideInInspector] public CardData enemyData;
     private GameObject newCardGO;
@@ -32,6 +33,7 @@ public class GameManager : MonoBehaviour
     private GameObject zero;
     private GameObject one, two, three, four, five, six, seven, eight, nine, ten, eleven, twelve;
     private Field playerField, enemyField;
+    private bool playerDrewCard = false;
 
 
     #region Unity
@@ -130,19 +132,76 @@ public class GameManager : MonoBehaviour
     {
         gameState = playerField.Score > enemyField.Score ? State.PLAYER_TURN : State.ENEMY_TURN;
         dialogText.text = gameState == State.PLAYER_TURN ? "Player Turn" : "Enemy Turn";
+        
+        /* (3) */
+        if (gameState == State.PLAYER_TURN)
+        {
+            PlayerTurn();
+        }
+        else
+        {
+            EnemyTurn();
+        }
     }
 
-    /*    (3) draw card and decide to put back or trade
+    /*    (3) draw card => decide to put back or trade
     *      3.1 - if decided to put back:
     *              - player has to choose a not yet turned card to reveal
     *
     *      3.2 - if player decided to trade
     *              - he has to choose a card to trade
     *                  - that card is going to the stack
-    * 
-    *    () choose a card from the stack to trade with own card
-    *
     */
+
+    private void PlayerTurn()
+    {
+        dialogText.text = "Take a Card from the Stack or draw a new card";
+        
+        /* possible Move 1 */
+        // draw card
+        // -> place card on stack
+        // now player can trade this card or reveal from his field
+
+        if (playerDrewCard)
+        {
+            dialogText.text = "Trade this Card or reveal on of your Cards";
+            
+            // possible move 2
+            if (playerRevealedCard)
+            {
+                // score is updated
+                // end turn
+                EndPlayerTurn();
+            }
+            
+            // or
+            // possible move 3
+        }
+        
+        /* possible Move 2 */
+        // reveal card
+        
+        /* possible Move 3 */
+        // trade card
+        
+        // end of player turn
+        
+    }
+
+    private void EndPlayerTurn()
+    {
+        playerRevealedCard = false;
+        PlaceCardOnStack();
+        gameState = State.ENEMY_TURN;
+    }
+
+    private void EnemyTurn()
+    {
+        
+        
+        // end of enemy turn
+        PlaceCardOnStack();
+    }
 
 
     /* when a card is turned:
@@ -176,6 +235,11 @@ public class GameManager : MonoBehaviour
         cardStackPrefab.GetComponent<Card>().valueText.text = c.valueText.text;
         cardStackPrefab.GetComponent<Card>().TurnCard();
         cardStackPrefab.GetComponent<Card>().location = c.location;
+
+        if (gameState == State.PLAYER_TURN)
+        {
+            playerDrewCard = true;
+        }
     }
 
     private void PlaceCardInField()

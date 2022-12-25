@@ -42,16 +42,24 @@ public class Card : MonoBehaviour
     // Card on click
     public void ShowCard()
     {
-        if (!wasTurned && (GameManager.instance.gameState == State.PLAYER_TURN || GameManager.instance.gameState == State.START) )
+        if (!wasTurned)
         {
             if (GameManager.instance.gameState == State.START)
             {
                 GameManager.instance.leftToTurn--;
+                
+                TurnCard();
+                GameManager.instance.UpdateScore(location);
+                
                 GameManager.instance.PlayerTurnTwoCards();
             }
-            TurnCard();
-            GameManager.instance.UpdateScore(location);
-            
+
+            if (GameManager.instance.gameState == State.PLAYER_TURN)
+            {
+                TurnCard();
+                GameManager.instance.UpdateScore(location);
+                GameManager.instance.playerRevealedCard = true;
+            }
         }
     }
 }
