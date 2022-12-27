@@ -25,7 +25,8 @@ public class GameManager : MonoBehaviour
     public TMP_Text dialogText;
     public State gameState;
     [HideInInspector] public int leftToTurn = 2;
-    public bool playerRevealedCard = false;
+    public bool playerRevealedCard;
+    public bool playerTradedCard;
 
     [HideInInspector] public CardData enemyData;
     private GameObject newCardGO;
@@ -33,7 +34,7 @@ public class GameManager : MonoBehaviour
     private GameObject zero;
     private GameObject one, two, three, four, five, six, seven, eight, nine, ten, eleven, twelve;
     private Field playerField, enemyField;
-    private bool playerDrewCard = false;
+    private bool playerDrewCard;
 
 
     #region Unity
@@ -130,6 +131,8 @@ public class GameManager : MonoBehaviour
      */
     private void CheckWhoBegins()
     {
+        PlaceCardOnStack();
+        
         gameState = playerField.Score > enemyField.Score ? State.PLAYER_TURN : State.ENEMY_TURN;
         dialogText.text = gameState == State.PLAYER_TURN ? "Player Turn" : "Enemy Turn";
         
@@ -153,7 +156,7 @@ public class GameManager : MonoBehaviour
     *                  - that card is going to the stack
     */
 
-    private void PlayerTurn()
+    public void PlayerTurn()
     {
         dialogText.text = "Take a Card from the Stack or draw a new card";
         
@@ -176,13 +179,28 @@ public class GameManager : MonoBehaviour
             
             // or
             // possible move 3
+            // trade card
+            if (playerTradedCard)
+            {
+                EndPlayerTurn();
+            }
         }
         
-        /* possible Move 2 */
+        /* possible Move 2?? */
         // reveal card
+        if (playerRevealedCard)
+        {
+            // score is updated
+            // end turn
+            EndPlayerTurn();
+        }
         
         /* possible Move 3 */
         // trade card
+        if (playerTradedCard)
+        {
+            EndPlayerTurn();
+        }
         
         // end of player turn
         
@@ -191,8 +209,12 @@ public class GameManager : MonoBehaviour
     private void EndPlayerTurn()
     {
         playerRevealedCard = false;
-        PlaceCardOnStack();
+        playerDrewCard = false;
+        playerTradedCard = false;
         gameState = State.ENEMY_TURN;
+        PlaceCardOnStack();
+        dialogText.text = "Enemy Turn";
+        EnemyTurn();
     }
 
     private void EnemyTurn()

@@ -11,23 +11,7 @@ public class Card : MonoBehaviour
     public int value;
     public bool wasTurned;
     public Location location;
-
-    public Card ThisCard;
-
-    public Card EmptyCard()
-    {
-        return gameObject.AddComponent<Card>();
-    }
-
-    public void GetValuesFromCard(Card from)
-    {
-        value = from.value;
-        wasTurned = from.wasTurned;
-        location = from.location;
-        valueText.text = from.valueText.text;
-        location = from.location;
-    }
-
+    
     private void Start()
     {
         valueText.enabled = wasTurned;
@@ -59,6 +43,7 @@ public class Card : MonoBehaviour
                 TurnCard();
                 GameManager.instance.UpdateScore(location);
                 GameManager.instance.playerRevealedCard = true;
+                GameManager.instance.PlayerTurn();
             }
         }
     }
