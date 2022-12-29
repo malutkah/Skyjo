@@ -37,13 +37,18 @@ public class Card : MonoBehaviour
                 
                 GameManager.instance.PlayerTurnTwoCards();
             }
-
-            if (GameManager.instance.gameState == State.PLAYER_TURN)
+            else if (GameManager.instance.gameState == State.PLAYER_TURN)
             {
                 TurnCard();
                 GameManager.instance.UpdateScore(location);
                 GameManager.instance.playerRevealedCard = true;
                 GameManager.instance.PlayerTurn();
+            }else if (GameManager.instance.gameState == State.ENEMY_TURN)
+            {
+                TurnCard();
+                GameManager.instance.UpdateScore(location);
+                GameManager.instance.enemyRevealedCard = true;
+                StartCoroutine(GameManager.instance.EnemyTurn());
             }
         }
     }

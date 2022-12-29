@@ -27,6 +27,10 @@ public class GameManager : MonoBehaviour
     [HideInInspector] public int leftToTurn = 2;
     public bool playerRevealedCard;
     public bool playerTradedCard;
+    public bool enemyRevealedCard;
+    public bool enemyTradedCard;
+    public int playerTotalScore;
+    public int enemyTotalScore;
 
     [HideInInspector] public CardData enemyData;
     private GameObject newCardGO;
@@ -35,6 +39,7 @@ public class GameManager : MonoBehaviour
     private GameObject one, two, three, four, five, six, seven, eight, nine, ten, eleven, twelve;
     private Field playerField, enemyField;
     private bool playerDrewCard;
+    private bool enemyDrewCard;
 
 
     #region Unity
@@ -98,6 +103,9 @@ public class GameManager : MonoBehaviour
      *************************/
 
     // GameFlowManager to combine the GameFlow Methods (Script? Method?)
+    
+    // One round goes until one player reaches 100 total points
+    // only in the very first round, two cards are revealed
 
 
     /*    (1) player needs to turn 2 cards (automated for cpu)
@@ -108,7 +116,6 @@ public class GameManager : MonoBehaviour
         {
             dialogText.text = $"Choose {leftToTurn} Cards to reveal!";
         }
-        
         
         /* (2) */
         if (leftToTurn <= 0)
@@ -143,7 +150,7 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            EnemyTurn();
+            StartCoroutine(EnemyTurn());
         }
     }
 
@@ -212,17 +219,33 @@ public class GameManager : MonoBehaviour
         playerDrewCard = false;
         playerTradedCard = false;
         gameState = State.ENEMY_TURN;
-        PlaceCardOnStack();
+        //PlaceCardOnStack();
         dialogText.text = "Enemy Turn";
-        EnemyTurn();
+        StartCoroutine(EnemyTurn());
     }
 
-    private void EnemyTurn()
+    private void EndEnemyTurn()
     {
-        
+        enemyDrewCard = false;
+        enemyTradedCard = false;
+        enemyRevealedCard = false;
+        gameState = State.PLAYER_TURN;
+        //PlaceCardOnStack();
+        dialogText.text = "Player Turn...";
+        PlayerTurn();
+    }
+    
+
+    // ReSharper disable Unity.PerformanceAnalysis
+    public IEnumerator EnemyTurn()
+    {
+        dialogText.text = "enemy choosing...";
+        yield return new WaitForSeconds(2f);
         
         // end of enemy turn
         PlaceCardOnStack();
+        dialogText.text = "enemy placed card on stack";
+        EndEnemyTurn();
     }
 
 
@@ -242,7 +265,24 @@ public class GameManager : MonoBehaviour
         {
             Debug.Log("Last Turn...");
             Debug.Log("Game Over..!");
+            
+            GameOver();
         }
+    }
+
+    private void GameOver()
+    {
+        enemyTotalScore += enemyField.Score;
+        playerTotalScore += playerField.Score;
+        
+        // reset
+        ResetField();
+    }
+
+    private void ResetField()
+    {
+        // reset field score
+        // 
     }
 
     #endregion
@@ -261,6 +301,10 @@ public class GameManager : MonoBehaviour
         if (gameState == State.PLAYER_TURN)
         {
             playerDrewCard = true;
+        }
+        else if (gameState == State.ENEMY_TURN)
+        {
+            enemyDrewCard = true;
         }
     }
 
