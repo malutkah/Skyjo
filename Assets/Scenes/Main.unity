@@ -170,6 +170,7 @@ GameObject:
   - component: {fileID: 89894639}
   - component: {fileID: 89894638}
   - component: {fileID: 89894640}
+  - component: {fileID: 89894641}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -199,6 +200,12 @@ MonoBehaviour:
   dialogText: {fileID: 164370047}
   gameState: 0
   leftToTurn: 2
+  playerRevealedCard: 0
+  playerTradedCard: 0
+  enemyRevealedCard: 0
+  enemyTradedCard: 0
+  playerTotalScore: 0
+  enemyTotalScore: 0
   enemyData: {fileID: 0}
 --- !u!4 &89894639
 Transform:
@@ -230,6 +237,18 @@ MonoBehaviour:
   deck: []
   DeckCountText: {fileID: 5228800503710472730}
   deckShuffled: []
+--- !u!114 &89894641
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 89894637}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 257601a43d9084fc2a741a73e6264d74, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &127199539
 GameObject:
   m_ObjectHideFlags: 0
@@ -2171,7 +2190,6 @@ MonoBehaviour:
   value: 0
   wasTurned: 0
   location: 0
-  ThisCard: {fileID: 0}
 --- !u!1 &1653591718
 GameObject:
   m_ObjectHideFlags: 0

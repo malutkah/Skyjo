@@ -32,7 +32,8 @@ public class GameManager : MonoBehaviour
     public int playerTotalScore;
     public int enemyTotalScore;
 
-    [HideInInspector] public CardData enemyData;
+    private CardData enemyData;
+    private EnemyController enemyAi;
     private GameObject newCardGO;
     private GameObject minusTwo, minusOne;
     private GameObject zero;
@@ -50,6 +51,7 @@ public class GameManager : MonoBehaviour
 
         playerField = gameBoard.GetComponent<Field>();
         enemyField = enemyBoard.GetComponent<Field>();
+        enemyAi = gameObject.GetComponent<EnemyController>();
     }
 
     // Start is called before the first frame update
@@ -243,6 +245,9 @@ public class GameManager : MonoBehaviour
         yield return new WaitForSeconds(2f);
         
         // end of enemy turn
+        enemyAi.LoadAi(enemyField, playerField, cardStackPrefab.GetComponent<Card>());
+        enemyAi.Decide();
+        
         PlaceCardOnStack();
         dialogText.text = "enemy placed card on stack";
         EndEnemyTurn();
